@@ -49,15 +49,17 @@ function getSessionFromRequest(req) {
   return match ? match[1] : null
 }
 
-// Cleanup abgelaufener Sessions alle 10 Minuten
-setInterval(() => {
-  const now = Date.now()
-  for (const [token, session] of sessions) {
-    if (now > session.expiresAt) {
-      sessions.delete(token)
+// Session-Cleanup Funktion (wird nur im Dev-Server gestartet)
+function startSessionCleanup() {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [token, session] of sessions) {
+      if (now > session.expiresAt) {
+        sessions.delete(token)
+      }
     }
-  }
-}, 10 * 60 * 1000)
+  }, 10 * 60 * 1000)
+}
 
 // API-Key Maskierung
 function maskApiKey(key) {
@@ -130,6 +132,9 @@ export default defineConfig({
     {
       name: 'dynamic-proxy',
       configureServer(server) {
+        // Session-Cleanup nur im Dev-Server starten (nicht während Build)
+        startSessionCleanup()
+
         // === Auth-Endpoints (immer zugänglich) ===
 
         // GET /api/auth/status - Prüft ob Auth aktiviert ist und ob Session gültig
