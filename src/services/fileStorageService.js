@@ -8,13 +8,12 @@ const PREFERENCES_API = '/api/preferences'
 const CUSTOM_QUESTIONS_API = '/api/custom-questions'
 
 /**
- * Prüft Response auf Auth-Fehler und leitet bei Bedarf zum Login
+ * Prüft Response auf Auth-Fehler
  */
 function handleAuthError(response) {
   if (response.status === 401) {
-    // Session abgelaufen - zur Login-Seite
-    window.location.reload()
-    throw new Error('Session abgelaufen')
+    // Fehler werfen - Auth-Handling läuft über App.jsx
+    throw new Error('Nicht authentifiziert')
   }
   return response
 }
