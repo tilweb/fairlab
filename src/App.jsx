@@ -31,7 +31,7 @@ function App() {
     checkAuth()
   }, [])
 
-  // Während Auth-Check: Ladebildschirm
+  // Während Auth-Check: Ladebildschirm (visuell konsistent mit Login)
   if (authState.checking) {
     return (
       <div style={{
@@ -39,11 +39,31 @@ function App() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f8fafc',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>&#9878;</div>
-          <p style={{ color: '#64748b' }}>Laden...</p>
+        <div style={{
+          background: '#fff',
+          borderRadius: '24px',
+          padding: '40px',
+          width: '100%',
+          maxWidth: '400px',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
+          textAlign: 'center',
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            margin: '0 auto 16px',
+          }}>
+            &#9878;
+          </div>
+          <p style={{ color: '#64748b', margin: 0 }}>Laden...</p>
         </div>
       </div>
     )

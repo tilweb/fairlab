@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { colors, fontSizes, fontWeights, spacing, baseStyles } from '../../config/styleConstants'
 import { uiStrings } from '../../config/uiStrings'
@@ -16,11 +16,20 @@ const navItems = [
 function Header() {
   const location = useLocation()
   const [authEnabled, setAuthEnabled] = useState(false)
+  const checkedRef = useRef(false)
 
   useEffect(() => {
-    checkAuthStatus().then(status => {
-      setAuthEnabled(status.authEnabled)
-    })
+    // Nur einmal prüfen, mit kurzer Verzögerung um Flackern zu vermeiden
+    if (checkedRef.current) return
+    checkedRef.current = true
+
+    const timer = setTimeout(() => {
+      checkAuthStatus().then(status => {
+        setAuthEnabled(status.authEnabled)
+      })
+    }, 100)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const handleLogout = async () => {
