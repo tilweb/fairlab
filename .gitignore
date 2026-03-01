@@ -5,11 +5,11 @@ node_modules/
 dist/
 
 # Environment & Config (enthält API-Keys!)
-config/api-config.json
-config/api-connections.json
+/config/api-config.json
+/config/api-connections.json
 
 # Test results (können sensible Daten enthalten)
-results/
+/results/
 
 # OS files
 .DS_Store
