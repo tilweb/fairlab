@@ -47,6 +47,7 @@ function KonfigurationPage() {
   const [connectionName, setConnectionName] = useState('')
   const [selectedConnectionId, setSelectedConnectionId] = useState(null)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showConnectionsImport, setShowConnectionsImport] = useState(false)
 
   // Gespeicherte Verbindungen beim Start laden
   useEffect(() => {
@@ -316,6 +317,24 @@ function KonfigurationPage() {
     actions.showNotification('Konfiguration erfolgreich importiert.', 'success')
   }
 
+  const handleImportConnections = async (files) => {
+    const data = files[0].data
+    const connections = Array.isArray(data) ? data : [data]
+
+    for (const conn of connections) {
+      await saveConnection(conn)
+    }
+
+    const updated = await loadConnections()
+    setSavedConnections(updated)
+    actions.showNotification(
+      connections.length === 1
+        ? '1 Verbindung importiert.'
+        : `${connections.length} Verbindungen importiert.`,
+      'success'
+    )
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -340,6 +359,14 @@ function KonfigurationPage() {
         onImport={handleImportConfig}
         title="Konfiguration importieren"
         description="Importieren Sie eine bestehende api-config.json Datei, um die aktuelle Konfiguration zu überschreiben."
+      />
+
+      <ImportDialog
+        open={showConnectionsImport}
+        onClose={() => setShowConnectionsImport(false)}
+        onImport={handleImportConnections}
+        title="Verbindungen importieren"
+        description="Importieren Sie eine api-connections.json Datei mit gespeicherten API-Verbindungen."
       />
 
       {/* API Configuration */}
@@ -455,6 +482,13 @@ function KonfigurationPage() {
             icon="💾"
           >
             Verbindung speichern
+          </Button>
+          <Button
+            onClick={() => setShowConnectionsImport(true)}
+            variant="secondary"
+            icon="📥"
+          >
+            Verbindungen importieren
           </Button>
         </div>
 
