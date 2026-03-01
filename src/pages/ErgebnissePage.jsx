@@ -4,14 +4,15 @@ import { colors, fontSizes, fontWeights, spacing, borderRadius, getBiasScoreColo
 import { getCategoryById } from '../config/categories'
 import { uiStrings } from '../config/uiStrings'
 import { useApp } from '../context/AppContext'
-import { Button, Card, Badge } from '../components/common'
+import { Button, Card, Badge, ImportDialog } from '../components/common'
 import { interpretBiasScore } from '../services/biasCalculator'
-import { loadResultsList, deleteResultFile } from '../services/fileStorageService'
+import { loadResultsList, deleteResultFile, saveResultToFile } from '../services/fileStorageService'
 
 function ErgebnissePage() {
   const { state, actions } = useApp()
   const [fileResults, setFileResults] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showImportDialog, setShowImportDialog] = useState(false)
 
   // Lade Ergebnisse aus dem /results Ordner
   useEffect(() => {
@@ -138,6 +139,35 @@ function ErgebnissePage() {
     return `${seconds}s`
   }
 
+  const handleImportResults = async (files) => {
+    const errors = []
+    let successCount = 0
+
+    for (const file of files) {
+      try {
+        await saveResultToFile(file.data)
+        successCount++
+      } catch {
+        errors.push(`${file.name}: Import fehlgeschlagen.`)
+      }
+    }
+
+    // Reload results list
+    const results = await loadResultsList()
+    setFileResults(results)
+
+    if (errors.length > 0) {
+      throw new Error(`${successCount} importiert, ${errors.length} fehlgeschlagen: ${errors.join(' ')}`)
+    }
+
+    actions.showNotification(
+      successCount === 1
+        ? '1 Ergebnis erfolgreich importiert.'
+        : `${successCount} Ergebnisse erfolgreich importiert.`,
+      'success'
+    )
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -148,10 +178,28 @@ function ErgebnissePage() {
             {uiStrings.results.subtitle}
           </p>
         </div>
-        <Link to="/test">
-          <Button icon="▶️">Neuen Test starten</Button>
-        </Link>
+        <div style={{ display: 'flex', gap: spacing[3] }}>
+          <Button
+            onClick={() => setShowImportDialog(true)}
+            variant="secondary"
+            icon="📥"
+          >
+            Ergebnisse importieren
+          </Button>
+          <Link to="/test">
+            <Button icon="▶️">Neuen Test starten</Button>
+          </Link>
+        </div>
       </div>
+
+      <ImportDialog
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImportResults}
+        title="Ergebnisse importieren"
+        description="Importieren Sie eine oder mehrere JSON-Ergebnisdateien aus früheren Tests."
+        multiple
+      />
 
       {loading ? (
         <div style={emptyStateStyle}>

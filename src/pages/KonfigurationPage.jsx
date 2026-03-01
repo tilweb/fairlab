@@ -4,7 +4,7 @@ import { categories } from '../config/categories'
 import { testSets, getCategoriesForTestSet, bbqCategoryNames } from '../config/testSets'
 import { uiStrings } from '../config/uiStrings'
 import { useApp } from '../context/AppContext'
-import { Button, Card, Input, Checkbox, InfoBox } from '../components/common'
+import { Button, Card, Input, Checkbox, InfoBox, ImportDialog } from '../components/common'
 import { testConnection } from '../services/apiService'
 import { loadConnections, saveConnection, deleteConnection } from '../services/fileStorageService'
 
@@ -46,6 +46,7 @@ function KonfigurationPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [connectionName, setConnectionName] = useState('')
   const [selectedConnectionId, setSelectedConnectionId] = useState(null)
+  const [showImportDialog, setShowImportDialog] = useState(false)
 
   // Gespeicherte Verbindungen beim Start laden
   useEffect(() => {
@@ -309,13 +310,37 @@ function KonfigurationPage() {
     return matchingTemplate ? matchingTemplate.id : 'custom'
   }
 
+  const handleImportConfig = async (files) => {
+    const config = files[0].data
+    await actions.setApiConfig(config)
+    actions.showNotification('Konfiguration erfolgreich importiert.', 'success')
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header */}
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>{uiStrings.config.title}</h1>
-        <p style={subtitleStyle}>{uiStrings.config.subtitle}</p>
+      <div style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={titleStyle}>{uiStrings.config.title}</h1>
+          <p style={subtitleStyle}>{uiStrings.config.subtitle}</p>
+        </div>
+        <Button
+          onClick={() => setShowImportDialog(true)}
+          variant="secondary"
+          icon="📥"
+          size="sm"
+        >
+          Config importieren
+        </Button>
       </div>
+
+      <ImportDialog
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImportConfig}
+        title="Konfiguration importieren"
+        description="Importieren Sie eine bestehende api-config.json Datei, um die aktuelle Konfiguration zu überschreiben."
+      />
 
       {/* API Configuration */}
       <div style={sectionStyle}>
