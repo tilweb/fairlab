@@ -14,9 +14,14 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 // === Verzeichnisse ===
-const RESULTS_DIR = path.resolve(process.cwd(), 'results')
-const CONFIG_DIR = path.resolve(process.cwd(), 'config')
-const DATA_DIR = path.resolve(process.cwd(), 'data/custom')
+// Auf Railway: Volume für persistente Daten nutzen
+const PERSIST_BASE = fs.existsSync('/app/data-persist')
+  ? '/app/data-persist'
+  : process.cwd()
+
+const RESULTS_DIR = path.resolve(PERSIST_BASE, 'results')
+const CONFIG_DIR = path.resolve(PERSIST_BASE, 'config')
+const DATA_DIR = path.resolve(PERSIST_BASE, 'data/custom')
 
 const CONNECTIONS_FILE = path.join(CONFIG_DIR, 'api-connections.json')
 const API_CONFIG_FILE = path.join(CONFIG_DIR, 'api-config.json')
@@ -447,6 +452,7 @@ app.get('*', (req, res) => {
 // === Server starten ===
 app.listen(PORT, () => {
   console.log(`FairLab Server läuft auf Port ${PORT}`)
+  console.log(`Datenspeicher: ${PERSIST_BASE}`)
   console.log(`Auth: ${AUTH_ENABLED ? 'AKTIVIERT' : 'deaktiviert'}`)
   if (!AUTH_ENABLED) {
     console.log('Hinweis: Setze FAIRLAB_PASSWORD für Passwortschutz')
