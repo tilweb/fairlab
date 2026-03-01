@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { colors, fontSizes, fontWeights, spacing, baseStyles } from '../../config/styleConstants'
 import { uiStrings } from '../../config/uiStrings'
-import { checkAuthStatus, logout } from '../../services/authService'
+import { getInitialAuthStatus, logout } from '../../services/authService'
 
 const navItems = [
   { path: '/', label: uiStrings.nav.home, icon: '🏠' },
@@ -13,24 +12,12 @@ const navItems = [
   { path: '/methodik', label: uiStrings.nav.methodology, icon: '📖' },
 ]
 
+// Auth-Status sofort beim Laden (synchron)
+const initialAuth = getInitialAuthStatus()
+
 function Header() {
   const location = useLocation()
-  const [authEnabled, setAuthEnabled] = useState(false)
-  const checkedRef = useRef(false)
-
-  useEffect(() => {
-    // Nur einmal prüfen, mit kurzer Verzögerung um Flackern zu vermeiden
-    if (checkedRef.current) return
-    checkedRef.current = true
-
-    const timer = setTimeout(() => {
-      checkAuthStatus().then(status => {
-        setAuthEnabled(status.authEnabled)
-      })
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [])
+  const authEnabled = initialAuth?.authEnabled ?? false
 
   const handleLogout = async () => {
     await logout()

@@ -10,16 +10,23 @@ import ErgebnisDetailPage from './pages/ErgebnisDetailPage'
 import PromptVergleichPage from './pages/PromptVergleichPage'
 import MethodikPage from './pages/MethodikPage'
 import FragenEditorPage from './pages/FragenEditorPage'
-import { checkAuthStatus } from './services/authService'
+import { getInitialAuthStatus, checkAuthStatus } from './services/authService'
+
+// Auth-Status sofort beim Laden holen (synchron, kein Flackern)
+const initialAuth = getInitialAuthStatus()
 
 function App() {
   const [authState, setAuthState] = useState({
-    checking: true,
-    authEnabled: false,
-    authenticated: false,
+    // Wenn eingebetteter Status vorhanden: sofort nutzen (kein checking)
+    checking: !initialAuth,
+    authEnabled: initialAuth?.authEnabled ?? false,
+    authenticated: initialAuth?.authenticated ?? false,
   })
 
   useEffect(() => {
+    // Nur API-Call wenn kein eingebetteter Status (Dev-Server)
+    if (initialAuth) return
+
     async function checkAuth() {
       const status = await checkAuthStatus()
       setAuthState({
@@ -31,7 +38,7 @@ function App() {
     checkAuth()
   }, [])
 
-  // Während Auth-Check: Ladebildschirm (visuell konsistent mit Login)
+  // Während Auth-Check (nur im Dev-Modus): Ladebildschirm
   if (authState.checking) {
     return (
       <div style={{

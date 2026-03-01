@@ -409,11 +409,39 @@ app.delete('/api/results/:id', (req, res) => {
 
 // === Statische Dateien (Frontend) ===
 const distPath = path.join(__dirname, 'dist')
-app.use(express.static(distPath))
+
+// Statische Assets (JS, CSS, Images) direkt servieren
+app.use(express.static(distPath, {
+  index: false, // index.html nicht automatisch servieren
+}))
+
+// HTML mit eingebettetem Auth-Status servieren
+// Das vermeidet Flackern weil React sofort den Auth-Status kennt
+let indexHtmlCache = null
+
+function getIndexHtml(req) {
+  // HTML nur einmal lesen und cachen
+  if (!indexHtmlCache) {
+    indexHtmlCache = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8')
+  }
+
+  const token = getSessionFromRequest(req)
+  const authStatus = {
+    authEnabled: AUTH_ENABLED,
+    authenticated: isValidSession(token),
+  }
+
+  // Auth-Status als globale Variable einbetten
+  const authScript = `<script>window.__FAIRLAB_AUTH__=${JSON.stringify(authStatus)}</script>`
+
+  // Script vor </head> einfügen
+  return indexHtmlCache.replace('</head>', `${authScript}</head>`)
+}
 
 // SPA Fallback - alle anderen Routen zum Frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'))
+  res.setHeader('Content-Type', 'text/html')
+  res.send(getIndexHtml(req))
 })
 
 // === Server starten ===
