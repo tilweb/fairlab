@@ -96,7 +96,7 @@ function appReducer(state, action) {
     case ActionTypes.HYDRATE:
       return {
         ...state,
-        apiConfig: action.payload.apiConfig || state.apiConfig,
+        apiConfig: { ...initialState.apiConfig, ...(action.payload.apiConfig || {}) },
         testResults: action.payload.testResults || state.testResults,
         customQuestions: action.payload.customQuestions || state.customQuestions,
         preferences: action.payload.preferences || state.preferences,
@@ -105,7 +105,7 @@ function appReducer(state, action) {
     case ActionTypes.SET_API_CONFIG:
       return {
         ...state,
-        apiConfig: action.payload,
+        apiConfig: { ...initialState.apiConfig, ...action.payload },
       }
 
     case ActionTypes.UPDATE_API_CONFIG:

@@ -188,7 +188,7 @@ function KonfigurationPage() {
   }
 
   const toggleCategory = (categoryId) => {
-    const current = state.apiConfig.selectedCategories
+    const current = state.apiConfig.selectedCategories || []
     const updated = current.includes(categoryId)
       ? current.filter(c => c !== categoryId)
       : [...current, categoryId]
@@ -719,7 +719,7 @@ function KonfigurationPage() {
               <div
                 key={cat.id}
                 style={categoryItemStyle(
-                  state.apiConfig.selectedCategories.includes(cat.id),
+                  (state.apiConfig.selectedCategories || []).includes(cat.id),
                   cat.color
                 )}
                 onClick={() => toggleCategory(cat.id)}
@@ -789,7 +789,7 @@ function KonfigurationPage() {
           color: colors.gray[600],
         }}>
           <strong>Geschätzte Testgröße:</strong>{' '}
-          {state.apiConfig.selectedCategories.length * state.apiConfig.questionsPerCategory * 2} Fragen
+          {(state.apiConfig.selectedCategories || []).length * (state.apiConfig.questionsPerCategory || 50) * 2} Fragen
           (je Kategorie ambig + disambig)
         </div>
       </div>
