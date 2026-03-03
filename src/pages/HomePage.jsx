@@ -133,7 +133,7 @@ function HomePage() {
     textAlign: 'center',
   }
 
-  const totalQuestions = getTotalQuestionCount()
+  const totalQuestions = getTotalQuestionCount('german-hr', state.customQuestions)
   const lastTest = state.testResults[0]
 
   return (

@@ -12,8 +12,9 @@ function TestPage() {
   const { state, actions } = useApp()
 
   const testRunner = useTestRunner(state.apiConfig, {
+    customQuestions: state.customQuestions,
     onComplete: async (result) => {
-      // In localStorage speichern (Backup)
+      // Legacy-Callback (Speicherung läuft dateibasiert über fileStorageService)
       actions.saveCompletedTest({
         analysis: result.analysis,
         config: result.config,

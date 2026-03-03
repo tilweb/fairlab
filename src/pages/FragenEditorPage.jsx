@@ -100,12 +100,12 @@ function FragenEditorPage() {
   }
 
   useEffect(() => {
-    loadCategoryQuestions(selectedCategory)
-    setStats(getQuestionStats())
-  }, [selectedCategory])
+    loadCategoryQuestions(selectedCategory, state.customQuestions)
+    setStats(getQuestionStats('german-hr', state.customQuestions))
+  }, [selectedCategory, state.customQuestions])
 
-  const loadCategoryQuestions = (category) => {
-    const loaded = loadQuestionsByCategory(category)
+  const loadCategoryQuestions = (category, customQuestions = state.customQuestions) => {
+    const loaded = loadQuestionsByCategory(category, 'german-hr', customQuestions)
     // Group by base ID (remove _ambig/_disambig suffix)
     const grouped = {}
     loaded.forEach(q => {
@@ -176,7 +176,7 @@ function FragenEditorPage() {
       return
     }
 
-    // Save to custom questions in localStorage
+    // Save to custom questions (App-Context + dateibasierte Persistenz)
     const customQuestions = state.customQuestions[selectedCategory] || []
     const updatedQuestions = customQuestions.filter(q => !q.id.startsWith(editForm.id))
 
@@ -194,12 +194,13 @@ function FragenEditorPage() {
       kontext: editForm.kontext_disambig,
     })
 
+    const nextCustomQuestions = { ...state.customQuestions, [selectedCategory]: updatedQuestions }
     actions.updateCategoryQuestions(selectedCategory, updatedQuestions)
     actions.showNotification(uiStrings.success.questionSaved, 'success')
 
     setIsEditing(false)
     setEditForm(null)
-    loadCategoryQuestions(selectedCategory)
+    loadCategoryQuestions(selectedCategory, nextCustomQuestions)
   }
 
   const handleCancel = () => {
@@ -210,7 +211,7 @@ function FragenEditorPage() {
   const handleExport = () => {
     const allQuestions = []
     categories.forEach(cat => {
-      const catQuestions = loadQuestionsByCategory(cat.id)
+      const catQuestions = loadQuestionsByCategory(cat.id, 'german-hr', state.customQuestions)
       allQuestions.push(...catQuestions)
     })
 

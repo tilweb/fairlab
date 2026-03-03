@@ -17,6 +17,7 @@ export function useTestRunner(apiConfig, options = {}) {
   const {
     onComplete,
     onError,
+    customQuestions = {},
     delayBetweenQuestions = 300,
   } = options
 
@@ -47,11 +48,12 @@ export function useTestRunner(apiConfig, options = {}) {
     const loaded = loadQuestionsWithContext(
       apiConfig.selectedCategories,
       apiConfig.questionsPerCategory,
-      apiConfig.testSetId || 'german-hr'
+      apiConfig.testSetId || 'german-hr',
+      customQuestions
     )
     setQuestions(loaded)
     return loaded
-  }, [apiConfig.selectedCategories, apiConfig.questionsPerCategory, apiConfig.testSetId])
+  }, [apiConfig.selectedCategories, apiConfig.questionsPerCategory, apiConfig.testSetId, customQuestions])
 
   // Reset state
   const reset = useCallback(() => {

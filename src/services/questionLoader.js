@@ -1,7 +1,5 @@
 // Fragen-Loader für verschiedene Testsets
 
-import { loadCustomQuestionsByCategory } from './storageService'
-
 // Import der deutschen Standard-Fragen
 import alterQuestions from '../data/questions/alter.json'
 import geschlechtQuestions from '../data/questions/geschlecht.json'
@@ -48,6 +46,11 @@ const bbqQuestions = {
 const testSetQuestions = {
   'german-hr': germanQuestions,
   'bbq-english': bbqQuestions,
+}
+
+function getCustomQuestionsForCategory(category, customQuestionsByCategory = {}) {
+  const questions = customQuestionsByCategory?.[category]
+  return Array.isArray(questions) ? questions : []
 }
 
 /**
@@ -99,7 +102,7 @@ function convertPairedToSplitFormat(questions) {
 /**
  * Lädt Fragen für eine Kategorie aus einem bestimmten Testset
  */
-export function loadQuestionsByCategory(category, testSetId = 'german-hr') {
+export function loadQuestionsByCategory(category, testSetId = 'german-hr', customQuestionsByCategory = {}) {
   const questionsMap = testSetQuestions[testSetId]
   if (!questionsMap) {
     console.warn(`Testset '${testSetId}' nicht gefunden`)
@@ -115,7 +118,7 @@ export function loadQuestionsByCategory(category, testSetId = 'german-hr') {
 
   // Benutzerdefinierte Fragen nur für deutsche Kategorien hinzufügen
   if (testSetId === 'german-hr') {
-    const customQuestions = loadCustomQuestionsByCategory(category)
+    const customQuestions = getCustomQuestionsForCategory(category, customQuestionsByCategory)
     return [...standardQuestions, ...customQuestions]
   }
 
@@ -125,11 +128,11 @@ export function loadQuestionsByCategory(category, testSetId = 'german-hr') {
 /**
  * Lädt alle Fragen für mehrere Kategorien aus einem Testset
  */
-export function loadQuestions(categories, testSetId = 'german-hr') {
+export function loadQuestions(categories, testSetId = 'german-hr', customQuestionsByCategory = {}) {
   const allQuestions = []
 
   for (const category of categories) {
-    const questions = loadQuestionsByCategory(category, testSetId)
+    const questions = loadQuestionsByCategory(category, testSetId, customQuestionsByCategory)
     allQuestions.push(...questions)
   }
 
@@ -139,11 +142,11 @@ export function loadQuestions(categories, testSetId = 'german-hr') {
 /**
  * Lädt eine zufällige Stichprobe von Fragen
  */
-export function loadRandomQuestions(categories, countPerCategory, testSetId = 'german-hr') {
+export function loadRandomQuestions(categories, countPerCategory, testSetId = 'german-hr', customQuestionsByCategory = {}) {
   const selectedQuestions = []
 
   for (const category of categories) {
-    const questions = loadQuestionsByCategory(category, testSetId)
+    const questions = loadQuestionsByCategory(category, testSetId, customQuestionsByCategory)
     const shuffled = shuffleArray([...questions])
     const selected = shuffled.slice(0, Math.min(countPerCategory, shuffled.length))
     selectedQuestions.push(...selected)
@@ -155,11 +158,11 @@ export function loadRandomQuestions(categories, countPerCategory, testSetId = 'g
 /**
  * Lädt Fragen und teilt sie in ambig/disambig auf
  */
-export function loadQuestionsWithContext(categories, countPerCategory, testSetId = 'german-hr') {
+export function loadQuestionsWithContext(categories, countPerCategory, testSetId = 'german-hr', customQuestionsByCategory = {}) {
   const allQuestions = []
 
   for (const category of categories) {
-    const questions = loadQuestionsByCategory(category, testSetId)
+    const questions = loadQuestionsByCategory(category, testSetId, customQuestionsByCategory)
 
     // Finde Fragen-Paare (gleiche ID, verschiedene context_condition)
     const questionPairs = groupQuestionPairs(questions)
@@ -216,7 +219,7 @@ function shuffleArray(array) {
 /**
  * Gibt Statistiken über verfügbare Fragen für ein Testset zurück
  */
-export function getQuestionStats(testSetId = 'german-hr') {
+export function getQuestionStats(testSetId = 'german-hr', customQuestionsByCategory = {}) {
   const stats = {}
   const questionsMap = testSetQuestions[testSetId]
 
@@ -224,7 +227,7 @@ export function getQuestionStats(testSetId = 'german-hr') {
 
   for (const [category, questions] of Object.entries(questionsMap)) {
     const customQuestions = testSetId === 'german-hr'
-      ? loadCustomQuestionsByCategory(category)
+      ? getCustomQuestionsForCategory(category, customQuestionsByCategory)
       : []
 
     stats[category] = {
@@ -241,8 +244,8 @@ export function getQuestionStats(testSetId = 'german-hr') {
 /**
  * Gibt die Gesamtzahl aller verfügbaren Fragen für ein Testset zurück
  */
-export function getTotalQuestionCount(testSetId = 'german-hr') {
-  const stats = getQuestionStats(testSetId)
+export function getTotalQuestionCount(testSetId = 'german-hr', customQuestionsByCategory = {}) {
+  const stats = getQuestionStats(testSetId, customQuestionsByCategory)
   return Object.values(stats).reduce((sum, cat) => sum + cat.total, 0)
 }
 
