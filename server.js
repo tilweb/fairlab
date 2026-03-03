@@ -137,6 +137,8 @@ const ALLOWED_PROXY_DOMAINS = [
   'openrouter.ai',
   'api.deepseek.com',
   'generativelanguage.googleapis.com',
+  'api.adacor.ai',
+  'api.tokenfactory.nebius.com',
 ]
 
 function isAllowedProxyDomain(url) {
