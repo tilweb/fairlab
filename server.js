@@ -57,6 +57,28 @@ for (const [file, defaultContent] of Object.entries(defaultFiles)) {
   }
 }
 
+function normalizeConnections(raw) {
+  if (Array.isArray(raw)) return raw
+  if (raw && typeof raw === 'object') {
+    if (Array.isArray(raw.connections)) return raw.connections
+    return Object.values(raw).filter(item => item && typeof item === 'object')
+  }
+  return []
+}
+
+function readConnections() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+    return normalizeConnections(raw)
+  } catch {
+    return []
+  }
+}
+
+function writeConnections(connections) {
+  fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(connections, null, 2))
+}
+
 // === Authentifizierung ===
 const AUTH_PASSWORD = process.env.FAIRLAB_PASSWORD || null
 const AUTH_ENABLED = !!AUTH_PASSWORD
@@ -298,7 +320,7 @@ app.put('/api/custom-questions', (req, res) => {
 
 app.get('/api/connections', (req, res) => {
   try {
-    const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+    const connections = readConnections()
     res.json(connections)
   } catch (error) {
     res.json([])
@@ -308,7 +330,12 @@ app.get('/api/connections', (req, res) => {
 app.post('/api/connections', (req, res) => {
   try {
     const newConnection = req.body
-    const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+
+    if (!newConnection || typeof newConnection !== 'object' || Array.isArray(newConnection)) {
+      return res.status(400).json({ error: 'Ungültige Verbindung: Objekt erwartet' })
+    }
+
+    const connections = readConnections()
 
     newConnection.id = newConnection.id || `conn_${Date.now()}`
     newConnection.createdAt = newConnection.createdAt || new Date().toISOString()
@@ -321,7 +348,7 @@ app.post('/api/connections', (req, res) => {
       connections.unshift(newConnection)
     }
 
-    fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(connections, null, 2))
+    writeConnections(connections)
     res.json(newConnection)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -330,9 +357,9 @@ app.post('/api/connections', (req, res) => {
 
 app.delete('/api/connections/:id', (req, res) => {
   try {
-    const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+    const connections = readConnections()
     const filtered = connections.filter(c => c.id !== req.params.id)
-    fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(filtered, null, 2))
+    writeConnections(filtered)
     res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })

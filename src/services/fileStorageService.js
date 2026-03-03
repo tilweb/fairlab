@@ -44,7 +44,16 @@ export async function saveConnection(connection) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(connection),
     })
-    if (!response.ok) throw new Error('Fehler beim Speichern')
+    if (!response.ok) {
+      let details = 'Fehler beim Speichern'
+      try {
+        const body = await response.json()
+        if (body?.error) details = body.error
+      } catch {
+        // ignore response parse errors
+      }
+      throw new Error(details)
+    }
     return await response.json()
   } catch (error) {
     console.error('Fehler beim Speichern der Verbindung:', error)

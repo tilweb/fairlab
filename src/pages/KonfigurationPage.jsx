@@ -319,20 +319,37 @@ function KonfigurationPage() {
 
   const handleImportConnections = async (files) => {
     const data = files[0].data
-    const connections = Array.isArray(data) ? data : [data]
+    const parsedConnections = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.connections)
+        ? data.connections
+        : [data]
 
+    const connections = parsedConnections.filter(conn => conn && typeof conn === 'object' && !Array.isArray(conn))
+    if (connections.length === 0) {
+      throw new Error('Keine gültigen Verbindungen gefunden. Erwartet wird ein Objekt, ein Array oder { "connections": [...] }.')
+    }
+
+    const errors = []
+    let successCount = 0
     for (const conn of connections) {
-      await saveConnection(conn)
+      try {
+        await saveConnection(conn)
+        successCount++
+      } catch (error) {
+        const label = conn.name || conn.modelName || conn.id || 'Unbenannte Verbindung'
+        errors.push(`${label}: ${error.message}`)
+      }
     }
 
     const updated = await loadConnections()
     setSavedConnections(updated)
-    actions.showNotification(
-      connections.length === 1
-        ? '1 Verbindung importiert.'
-        : `${connections.length} Verbindungen importiert.`,
-      'success'
-    )
+
+    if (errors.length > 0) {
+      throw new Error(`${successCount} importiert, ${errors.length} fehlgeschlagen: ${errors.join(' ')}`)
+    }
+
+    actions.showNotification(successCount === 1 ? '1 Verbindung importiert.' : `${successCount} Verbindungen importiert.`, 'success')
   }
 
   return (

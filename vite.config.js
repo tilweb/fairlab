@@ -125,6 +125,28 @@ for (const [file, defaultContent] of Object.entries(defaultFiles)) {
   }
 }
 
+function normalizeConnections(raw) {
+  if (Array.isArray(raw)) return raw
+  if (raw && typeof raw === 'object') {
+    if (Array.isArray(raw.connections)) return raw.connections
+    return Object.values(raw).filter(item => item && typeof item === 'object')
+  }
+  return []
+}
+
+function readConnections() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+    return normalizeConnections(raw)
+  } catch {
+    return []
+  }
+}
+
+function writeConnections(connections) {
+  fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(connections, null, 2))
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -351,7 +373,7 @@ export default defineConfig({
           if (req.url && req.url !== '/' && req.url !== '') return next()
 
           try {
-            const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+            const connections = readConnections()
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(connections))
           } catch (error) {
@@ -371,7 +393,12 @@ export default defineConfig({
             }
 
             const newConnection = JSON.parse(body)
-            const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+            if (!newConnection || typeof newConnection !== 'object' || Array.isArray(newConnection)) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'Ungültige Verbindung: Objekt erwartet' }))
+              return
+            }
+            const connections = readConnections()
 
             newConnection.id = newConnection.id || `conn_${Date.now()}`
             newConnection.createdAt = newConnection.createdAt || new Date().toISOString()
@@ -385,7 +412,7 @@ export default defineConfig({
               connections.unshift(newConnection)
             }
 
-            fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(connections, null, 2))
+            writeConnections(connections)
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(newConnection))
           } catch (error) {
@@ -402,9 +429,9 @@ export default defineConfig({
           if (!id) return next()
 
           try {
-            const connections = JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf-8'))
+            const connections = readConnections()
             const filtered = connections.filter(c => c.id !== id)
-            fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(filtered, null, 2))
+            writeConnections(filtered)
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ success: true }))
           } catch (error) {
